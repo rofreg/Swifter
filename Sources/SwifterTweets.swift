@@ -236,6 +236,22 @@ public extension Swifter {
 		}, failure: failure)
 	}
 
+  func postTweetWithGifData(data: Data, text: String, success: SuccessHandler? = nil, failure: FailureHandler? = nil) {
+    self.prepareUpload(data: data, success: { json, response in
+      if let media_id = json["media_id_string"].string {
+        self.uploadGIF(media_id, data: data, name: attachmentUrl.lastPathComponent, success: { json, response in
+          self.finalizeUpload(mediaId: media_id, success: { json, resoponse in
+            self.postTweet(status: text, mediaIDs: [media_id], success: success, failure: failure)
+          }, failure: failure)
+        }, failure: failure)
+      }
+      else {
+        let error = SwifterError(message: "Bad Response for GIF Upload", kind: .invalidGifResponse)
+        failure?(error)
+      }
+    }, failure: failure)
+  }
+
     /**
     POST	media/upload
 
